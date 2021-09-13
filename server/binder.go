@@ -140,6 +140,18 @@ func (b *binder) FilterConn(userID, event string) ([]*Conn, error) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
+	if userID == "all" {
+		ecs := make([]*Conn, 0, len(b.connID2UserIDMap))
+		for _, eConns := range b.userID2EventConnMap {
+			for i := range *eConns {
+				if event == "" || (*eConns)[i].Event == event {
+					ecs = append(ecs, (*eConns)[i].Conn)
+				}
+			}
+		}
+		return ecs, nil
+	}
+
 	if eConns, ok := b.userID2EventConnMap[userID]; ok {
 		ecs := make([]*Conn, 0, len(*eConns))
 		for i := range *eConns {
