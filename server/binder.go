@@ -1,4 +1,4 @@
-package wserver
+package server
 
 import (
 	"errors"

@@ -2,8 +2,7 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/alfred-zhong/wserver"
+	wserver "wserver/server"
 )
 
 func main() {
