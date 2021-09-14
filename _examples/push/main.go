@@ -13,6 +13,7 @@ import (
 func main() {
 	pushURL := "http://127.0.0.1:12345/push"
 	contentType := "application/json"
+	Authorization := ""
 
 	for {
 		pm := server.PushMessage{
@@ -22,11 +23,24 @@ func main() {
 		}
 		b, _ := json.Marshal(pm)
 
-		response, err := http.DefaultClient.Post(pushURL, contentType, bytes.NewReader(b))
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", pushURL, bytes.NewReader(b))
 		if err != nil {
-			fmt.Println(err)
+			panic(err.Error())
+		}
+		req.Header.Set("Content-Type", contentType)
+		req.Header.Set("Authorization", Authorization)
+		response, err2 := client.Do(req)
+		defer response.Body.Close()
+		if err2 != nil {
+			panic(err2.Error())
+		}
+
+		if response.StatusCode != 200 {
+			fmt.Println(response.Status)
 			return
 		}
+
 		body, _ := ioutil.ReadAll(response.Body)
 		fmt.Println(string(body))
 		time.Sleep(time.Second)

@@ -145,6 +145,7 @@ func (s *pushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cnt, err := s.push(pm.UserID, pm.Event, pm.Message)
+	log.Printf("推送%d人: %+v", cnt, pm)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
