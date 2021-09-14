@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	wserver "wserver/server"
 )
@@ -36,9 +37,8 @@ func main() {
 	}
 
 	// Run server
-	fmt.Println("Server", server.Addr)
-	fmt.Println("WSPath", server.WSPath)
-	fmt.Println("PushPath", server.PushPath)
+	log.Printf("Server: %s  WSPath: %s  PushPath: %s", server.Addr, server.WSPath, server.PushPath)
+	log.Println("启动服务...")
 	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
