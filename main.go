@@ -33,11 +33,9 @@ func main() {
 	// Set PushAuth func to check push request. If the request is valid, returns
 	// true. Otherwise return false and request will be ignored.
 	server.PushAuth = func(r *http.Request) bool {
-		// TODO: check if request is valid
 		if serverConf.PushAuthToken != r.Header.Get("Authorization") {
 			return false
 		}
-
 		return true
 	}
 
