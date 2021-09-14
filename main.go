@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"wserver/conf"
 	wserver "wserver/server"
 )
 
 func main() {
-	server := wserver.NewServer(":12345")
+	serverConf := conf.AppConf.Server
+	server := wserver.NewServer(serverConf.Addr)
 
 	// Define websocket connect url, default "/ws"
 	server.WSPath = "/ws"
@@ -32,6 +34,9 @@ func main() {
 	// true. Otherwise return false and request will be ignored.
 	server.PushAuth = func(r *http.Request) bool {
 		// TODO: check if request is valid
+		if serverConf.PushAuthToken != r.Header.Get("Authorization") {
+			return false
+		}
 
 		return true
 	}

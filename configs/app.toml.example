@@ -1,0 +1,3 @@
+[Server]
+PushAuthToken=""
+Addr="0.0.0.0:12345"
