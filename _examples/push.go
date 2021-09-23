@@ -7,13 +7,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"wserver/conf"
 	"wserver/server"
 )
 
 func main() {
 	pushURL := "http://127.0.0.1:12345/push"
 	contentType := "application/json"
-	Authorization := ""
+	Authorization := conf.AppConf.Server.PushAuthKey
 
 	for {
 		pm := server.PushMessage{
@@ -22,6 +23,7 @@ func main() {
 			Message: fmt.Sprintf("Hello in %s", time.Now().Format("2006-01-02 15:04:05.000")),
 		}
 		b, _ := json.Marshal(pm)
+		fmt.Println(string(b))
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", pushURL, bytes.NewReader(b))
