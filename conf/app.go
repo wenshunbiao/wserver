@@ -11,8 +11,9 @@ type appConfig struct {
 }
 
 type Server struct {
-	PushAuthToken string
-	Addr          string
+	PushAuthKey string
+	WsAuthKey   string
+	Addr        string
 }
 
 // 全局配置信息

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"wserver/conf"
 	wserver "wserver/server"
+	"wserver/utils"
 )
 
 func main() {
@@ -19,21 +19,39 @@ func main() {
 
 	// Set AuthToken func to authorize websocket connection, token is sent by
 	// client for registe.
-	server.AuthToken = func(token string) (userID string, ok bool) {
-		// TODO: check if token is valid and calculate userID
-		//if token == "aaa" {
-		//	return "jack", true
-		//}
-		//
-		//return "", false
-		fmt.Println("user: " + token + " connect")
-		return token, true
+	server.AuthToken = func(token string, conn *wserver.Conn) (userID string, ok bool) {
+		// 不配置授权key 直接返回token作为用户id
+		if serverConf.WsAuthKey == "" {
+			return token, true
+		}
+
+		// 解析token
+		claims, err := utils.ParseToken(token)
+		if err != nil {
+			log.Println(err)
+			conn.Write([]byte(err.Error()))
+			return "", false
+		}
+
+		if claims.Subject == "" {
+			log.Println("sub is required")
+			conn.Write([]byte("sub is required"))
+			return "", false
+		}
+
+		log.Println("user auth success: " + claims.Subject)
+		return claims.Subject, true
 	}
 
 	// Set PushAuth func to check push request. If the request is valid, returns
 	// true. Otherwise return false and request will be ignored.
 	server.PushAuth = func(r *http.Request) bool {
-		if serverConf.PushAuthToken != r.Header.Get("Authorization") {
+		// 不配置授权key 直接通过
+		if serverConf.PushAuthKey == "" {
+			return true
+		}
+
+		if serverConf.PushAuthKey != r.Header.Get("Authorization") {
 			return false
 		}
 		return true

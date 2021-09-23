@@ -44,7 +44,7 @@ type Server struct {
 
 	// Check token if it's valid and return userID. If token is valid, userID
 	// must be returned and ok should be true. Otherwise ok should be false.
-	AuthToken func(token string) (userID string, ok bool)
+	AuthToken func(token string, conn *Conn) (userID string, ok bool)
 
 	// Authorize push request. Message will be sent if it returns true,
 	// otherwise the request will be discarded. Default nil and push request

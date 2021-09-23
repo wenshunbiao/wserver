@@ -1,3 +1,9 @@
 [Server]
-PushAuthToken=""
+# http推送授权key
+PushAuthKey=""
+
+# ws连接授权key  AES加密算法,建议长度32
+WsAuthToken=""
+
+# 服务监听地址
 Addr="0.0.0.0:12345"
