@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/gorilla/websocket"
+	"sync"
 )
 
 // websocketHandler defines to handle websocket upgrade request.
@@ -168,14 +168,23 @@ func (s *pushHandler) push(userID, event, message string) (int, error) {
 		return 0, fmt.Errorf("filter conn fail: %v", err)
 	}
 	cnt := 0
+	lock := &sync.Mutex{}
+	wg := &sync.WaitGroup{}
 	for i := range conns {
-		_, err := conns[i].Write([]byte(message))
-		if err != nil {
-			s.binder.Unbind(conns[i])
-			continue
-		}
-		cnt++
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, err := conns[i].Write([]byte(message))
+			if err != nil {
+				s.binder.Unbind(conns[i])
+				return
+			}
+			lock.Lock()
+			cnt++
+			lock.Unlock()
+		}(i)
 	}
+	wg.Wait()
 
 	return cnt, nil
 }
