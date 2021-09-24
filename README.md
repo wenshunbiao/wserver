@@ -2,9 +2,35 @@
 
 [![Build Status](https://www.travis-ci.org/alfred-zhong/wserver.svg?branch=master)](https://www.travis-ci.org/alfred-zhong/wserver) [![GoDoc](https://godoc.org/github.com/alfred-zhong/wserver?status.svg)](https://godoc.org/github.com/alfred-zhong/wserver) [![Go Report Card](https://goreportcard.com/badge/github.com/alfred-zhong/wserver)](https://goreportcard.com/report/github.com/alfred-zhong/wserver)
 
-Package for setup websocket server with message push
+轻量级的 Websocket 消息推送服务
 
-> This package is still not stable and not recommended to be used in production.
+## 授权
+
+### HTTP 推送授权机制
+
+在 `header` 传递 `Authorization` 请求头，如：
+
+```shell
+curl -X POST -H "Content-Type: application/json" -H "Authorization: zouaR7n1ZoX2YPZFjyYRX6Lu7vCbS82D" -d '{"userId":"all","Event":"topic1","Message":"Hello in 2021-09-24 16:07:55.966"}' -i http://127.0.0.1:12345/push
+```
+
+### Websocket 连接注册消息的token授权机制
+
+采用标准的 [JWT -- JSON WEB TOKEN](https://jwt.io/) 来构建 token，其载荷如：
+
+```json
+{
+  "sub": "user3688",
+  "iss": "wserver",
+  "iat": 1632473835,
+  "exp": 1632560253,
+  "nbf": 1632473835,
+  "jti": "37c107e4609ddbcc9c096ea5ee76c667",
+  "aud": "dev"
+}
+```
+
+其中 `sub` 是必须的，它是你的用户ID。其他字段都是可选的，但 `wserver` 服务接受并验证 `iat`、`nbf`、`exp` 字段，并建议你传递 `exp` 字段以控制你的 `JWT` 有效期。
 
 ## Basic Usage
 
@@ -12,14 +38,12 @@ Try to start a wserver, you just need to write like this.
 
 ### Start wserver
 
-```go
-server := wserver.NewServer(":12345")
-if err := server.ListenAndServe(); err != nil {
-    panic(err)
-}
+```
+go run main.go
 ```
 
-Now wserver listens on port: 12345.
+Now wserver listens on port: 12345.  
+启动后会自动在当前目录生成配置文件 `configs/app.toml`
 
 ### Browser connecting
 
@@ -27,8 +51,8 @@ Now browser can connect to `ws://ip:12345/ws`. After connection established, bro
 
 ```json
 {
-    "token": "03A3408D-3BD4-4C6C-BDC7-8596E6D31848",
-    "event": "whatever-it-interested"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzI1NTEzODksInN1YiI6InVzZXIzNjg4In0.EVK26QeHd0d31ZAK0J9xY9wmBAhBRvm5U1sS80D3vIM",
+    "event": "topic1"
 }
 ```
 
@@ -40,58 +64,19 @@ Now you can send a request to `http:/ip:12345/push` to push a message. Message s
 
 ```json
 {
-    "userId": "03A3408D-3BD4-4C6C-BDC7-8596E6D31848",
-    "event": "whatever-it-interested",
+    "userId": "user3688",
+    "event": "topic1",
     "message": "Hello World"
 }
 ```
 
 The `userId` is equal to token is not specified (customize by using `server.AuthToken`). The `event` is equal to that above and `message` is the real content will be sent to each websocket connection.
 
-## Example
-
-The server code:
-
-```go
-func main() {
-	server := wserver.NewServer(":12345")
-
-	// Define websocket connect url, default "/ws"
-	server.WSPath = "/ws"
-	// Define push message url, default "/push"
-	server.PushPath = "/push"
-
-	// Set AuthToken func to authorize websocket connection, token is sent by
-	// client for registe.
-	server.AuthToken = func(token string) (userID string, ok bool) {
-		// TODO: check if token is valid and calculate userID
-		if token == "aaa" {
-			return "jack", true
-		}
-
-		return "", false
-	}
-
-	// Set PushAuth func to check push request. If the request is valid, returns
-	// true. Otherwise return false and request will be ignored.
-	server.PushAuth = func(r *http.Request) bool {
-		// TODO: check if request is valid
-
-		return true
-	}
-
-	// Run server
-	if err := server.ListenAndServe(); err != nil {
-		panic(err)
-	}
-}
-```
-
 If you want to run a demo. Then follow the steps below:
 
-* Go to **_examples/server** and run `go run main.go` to start a wserver.
+* run `go run main.go` to start a wserver.
 * Open the webpage **_examples/index.html** in the browser.
-* Go to **_examples/push** and run `go run main.go` to send some messages.
+* run `go run _examples/push.go` to send some messages.
 
 If all success, you will see the content like this:
 
